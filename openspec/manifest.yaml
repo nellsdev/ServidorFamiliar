@@ -1,0 +1,19 @@
+project: family-backup-server
+description: >
+  Local backup/home server provisioning on reused hardware. Nextcloud +
+  automated device backups for a family of 3.
+mode: openspec
+created: 2026-06-15
+schema_version: 1.0
+
+structure:
+  config.yaml: Project context, strict TDD mode, testing capabilities, phase rules
+  manifest.yaml: This file — index of the openspec tree
+  specs/: Spefication documents (delta specs per change)
+  changes/: Active change proposals
+  changes/archive/: Completed/archived changes
+
+conventions:
+  language: English
+  commit_style: conventional-commits
+  config_validation: yamllint (when available)

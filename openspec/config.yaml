@@ -1,0 +1,61 @@
+context: >
+  Local backup/home server on reused hardware (HP Compaq 5800, Core 2 Duo E7400,
+  4GB RAM). Ubuntu 22.04 LTS host provisioning Nextcloud + automatic backups for
+  a family of 3 (Android + iOS). Infrastructure-as-code via systemd + Ansible.
+  No application test suite — this is an ops/infra project.
+
+strict_tdd: false
+reason_strict_tdd_disabled: >
+  Infrastructure project with no code-level test runner. Validation happens
+  through smoke tests, manual restore drills, and monitoring (e.g. health
+  checks, backup integrity verification). TDD not applicable.
+
+testing:
+  frameworks: []
+  unit: false
+  integration: false
+  e2e: false
+  coverage: false
+  linter: false
+  type_checker: false
+  formatter: false
+  notes: >
+    No test runners detected. Validation strategy relies on infrastructure
+    smoke tests (systemd unit status, Nextcloud cron checks, backup
+    integrity via sha256 + restore drills) and monitoring (Uptime Kuma or
+    similar). Consider Ansible Molecule for playbook validation when
+    automation is introduced.
+
+phases:
+  proposal:
+    required: false
+    notes: >-
+      Enable proposal phase for significant architectural changes (e.g.
+      switching backup targets, adding new services). Skip for routine
+      config tuning.
+  spec:
+    required: false
+    notes: >-
+      Formal spec only needed when multiple stakeholders need to review
+      scope (e.g. adding a new family member's device). Otherwise light
+      spec in the proposal or design doc suffices.
+  design:
+    required: true
+    notes: >-
+      Always document design decisions for an infra project — hardware
+      constraints (4GB RAM, Core 2 Duo) make tradeoffs critical. Use
+      design docs to capture resource budget, failure modes, and
+      recovery procedures.
+  tasks:
+    required: true
+    notes: Break work into executable tasks with validation steps.
+  apply:
+    required: true
+  verify:
+    required: true
+    notes: >-
+      Verify via smoke tests (systemd, HTTPS reachability, backup file
+      presence + checksum, restore drill). Document verify script in
+      each change.
+  archive:
+    required: true
