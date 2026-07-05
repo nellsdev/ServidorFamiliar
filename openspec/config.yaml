@@ -1,7 +1,7 @@
 context: >
   Local backup/home server on reused hardware (HP Compaq 5800, Core 2 Duo E7400,
-  4GB RAM). Ubuntu 22.04 LTS host provisioning Nextcloud + automatic backups for
-  a family of 3 (Android + iOS). Infrastructure-as-code via systemd + Ansible.
+  4GB RAM). Debian 12 host provisioning Nextcloud + automatic backups for
+  a family of 3 (Android + iOS). Infrastructure-as-code via systemd + bash scripts.
   No application test suite — this is an ops/infra project.
 
 strict_tdd: false
@@ -23,8 +23,7 @@ testing:
     No test runners detected. Validation strategy relies on infrastructure
     smoke tests (systemd unit status, Nextcloud cron checks, backup
     integrity via sha256 + restore drills) and monitoring (Uptime Kuma or
-    similar). Consider Ansible Molecule for playbook validation when
-    automation is introduced.
+    similar). Consider shellcheck for bash script validation.
 
 phases:
   proposal:
