@@ -246,22 +246,24 @@ rm -f /etc/nginx/sites-enabled/default
 
 log "nginx vhost written and enabled"
 
-log "Writing PHP-FPM pool config..."
+log "Configuring PHP-FPM pool..."
 
-cat > /etc/php/8.4/fpm/pool.d/nextcloud.conf << 'PHPFPM'
-[nextcloud]
-user = www-data
-group = www-data
-listen = /run/php/php8.4-fpm.sock
-pm = static
-pm.max_children = 3
-pm.max_requests = 500
-php_admin_value[memory_limit] = 512M
-php_admin_value[upload_max_filesize] = 2G
-php_admin_value[post_max_size] = 2G
-php_admin_value[max_execution_time] = 3600
-php_admin_flag[display_errors] = Off
-PHPFPM
+# Remove conflicting pool file if it exists (conflicts with www.conf socket)
+rm -f /etc/php/8.4/fpm/pool.d/nextcloud.conf
+
+# Update www pool settings for Nextcloud
+sed -i 's/^pm = .*/pm = static/' /etc/php/8.4/fpm/pool.d/www.conf
+sed -i 's/^pm.max_children = .*/pm.max_children = 3/' /etc/php/8.4/fpm/pool.d/www.conf
+sed -i 's/^pm.max_requests = .*/pm.max_requests = 500/' /etc/php/8.4/fpm/pool.d/www.conf
+sed -i 's/^php_admin_value\[memory_limit\] = .*/php_admin_value[memory_limit] = 512M/' /etc/php/8.4/fpm/pool.d/www.conf
+if ! grep -q 'upload_max_filesize' /etc/php/8.4/fpm/pool.d/www.conf; then
+    echo 'php_admin_value[upload_max_filesize] = 2G' >> /etc/php/8.4/fpm/pool.d/www.conf
+fi
+if ! grep -q 'post_max_size' /etc/php/8.4/fpm/pool.d/www.conf; then
+    echo 'php_admin_value[post_max_size] = 2G' >> /etc/php/8.4/fpm/pool.d/www.conf
+fi
+
+log "PHP-FPM pool configured (www.conf)"
 
 log "PHP-FPM pool config written"
 
