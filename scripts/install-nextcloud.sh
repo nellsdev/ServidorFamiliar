@@ -5,9 +5,15 @@ source "$SCRIPT_DIR/lib.sh"
 
 check_root
 
+FORCE=false
+if [ "${1:-}" = "--force" ]; then
+    FORCE=true
+fi
+
 IDEMPOTENCY_FILE="/var/www/nextcloud/version.php"
-if [ -f "$IDEMPOTENCY_FILE" ]; then
+if [ -f "$IDEMPOTENCY_FILE" ] && [ "$FORCE" != "true" ]; then
     log "Nextcloud already installed at /var/www/nextcloud — skipping install"
+    log "Run with --force to re-apply configuration"
     exit 0
 fi
 
@@ -78,10 +84,14 @@ log "Nextcloud database and user created"
 log "Downloading Nextcloud..."
 
 NC_VERSION="34"
-wget -nv "https://download.nextcloud.com/server/releases/latest-${NC_VERSION}.tar.bz2" -O /tmp/nextcloud.tar.bz2
-tar xjf /tmp/nextcloud.tar.bz2 -C /var/www/
-chown -R www-data:www-data /var/www/nextcloud
-rm -f /tmp/nextcloud.tar.bz2
+if [ ! -f "$IDEMPOTENCY_FILE" ]; then
+    wget -nv "https://download.nextcloud.com/server/releases/latest-${NC_VERSION}.tar.bz2" -O /tmp/nextcloud.tar.bz2
+    tar xjf /tmp/nextcloud.tar.bz2 -C /var/www/
+    chown -R www-data:www-data /var/www/nextcloud
+    rm -f /tmp/nextcloud.tar.bz2
+else
+    log "Nextcloud already extracted — skipping download"
+fi
 
 log "Nextcloud $NC_VERSION extracted to /var/www/nextcloud"
 
