@@ -20,18 +20,18 @@ apt-get update -qq
 PACKAGES=(
     nginx
     mariadb-server
-    php8.2-fpm
-    php8.2-gd
-    php8.2-curl
-    php8.2-xml
-    php8.2-zip
-    php8.2-intl
-    php8.2-mbstring
-    php8.2-bz2
-    php8.2-mysql
-    php8.2-apcu
-    php8.2-ldap
-    php8.2-imagick
+    php8.3-fpm
+    php8.3-gd
+    php8.3-curl
+    php8.3-xml
+    php8.3-zip
+    php8.3-intl
+    php8.3-mbstring
+    php8.3-bz2
+    php8.3-mysql
+    php8.3-apcu
+    php8.3-ldap
+    php8.3-imagick
     avahi-daemon
     nftables
     ethtool
@@ -77,7 +77,7 @@ log "Nextcloud database and user created"
 
 log "Downloading Nextcloud..."
 
-NC_VERSION="29.0.4"
+NC_VERSION="34"
 wget -q "https://download.nextcloud.com/server/releases/nextcloud-${NC_VERSION}.tar.bz2" -O /tmp/nextcloud.tar.bz2
 tar xjf /tmp/nextcloud.tar.bz2 -C /var/www/
 chown -R www-data:www-data /var/www/nextcloud
@@ -113,7 +113,7 @@ server {
         fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_param modHeadersAvailable true;
         fastcgi_param front_controller_active true;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
         fastcgi_intercept_errors on;
         fastcgi_request_buffering off;
         fastcgi_read_timeout 3600;
@@ -214,11 +214,11 @@ log "nginx vhost written and enabled"
 
 log "Writing PHP-FPM pool config..."
 
-cat > /etc/php/8.2/fpm/pool.d/nextcloud.conf << 'PHPFPM'
+cat > /etc/php/8.3/fpm/pool.d/nextcloud.conf << 'PHPFPM'
 [nextcloud]
 user = www-data
 group = www-data
-listen = /run/php/php8.2-fpm.sock
+listen = /run/php/php8.3-fpm.sock
 pm = static
 pm.max_children = 3
 pm.max_requests = 500
@@ -284,8 +284,8 @@ log "Cron job installed"
 
 log "Enabling and restarting services..."
 
-systemctl enable nginx mariadb php8.2-fpm avahi-daemon
-systemctl restart nginx mariadb php8.2-fpm avahi-daemon
+systemctl enable nginx mariadb php8.3-fpm avahi-daemon
+systemctl restart nginx mariadb php8.3-fpm avahi-daemon
 
 log "Services enabled and restarted"
 
