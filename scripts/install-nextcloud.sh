@@ -55,10 +55,15 @@ done
 
 log "All packages installed"
 
-log "Securing MariaDB..."
+log "Configuring MariaDB..."
 
-MARIADB_ROOT_PASS=$(openssl rand -base64 24)
-mysql <<SQL
+MARIADB_ROOT_PASS=""
+NEXTCLOUD_DB_PASS=$(openssl rand -base64 24)
+
+if mysql -u root -e "SELECT 1" &>/dev/null; then
+    # Fresh install — no root password yet
+    MARIADB_ROOT_PASS=$(openssl rand -base64 24)
+    mysql -u root <<SQL
 ALTER USER 'root'@'localhost' IDENTIFIED BY '$MARIADB_ROOT_PASS';
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
@@ -66,20 +71,39 @@ DROP DATABASE IF EXISTS test;
 DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 FLUSH PRIVILEGES;
 SQL
-
-log "MariaDB root password set"
-
-log "Creating Nextcloud database and user..."
-
-NEXTCLOUD_DB_PASS=$(openssl rand -base64 24)
-mysql -u root -p"$MARIADB_ROOT_PASS" <<SQL
+    mysql -u root -p"$MARIADB_ROOT_PASS" <<SQL
 CREATE DATABASE IF NOT EXISTS nextcloud CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE USER IF NOT EXISTS 'nextcloud'@'localhost' IDENTIFIED BY '$NEXTCLOUD_DB_PASS';
 GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextcloud'@'localhost';
 FLUSH PRIVILEGES;
 SQL
-
-log "Nextcloud database and user created"
+    log "MariaDB secured and Nextcloud DB created"
+elif [ -d /var/www/nextcloud ] && [ -f /var/www/nextcloud/version.php ]; then
+    # Nextcloud already extracted — try to set/reset nextcloud DB password
+    log "Updating Nextcloud DB user password..."
+    mysql -u root -e "ALTER USER 'nextcloud'@'localhost' IDENTIFIED BY '$NEXTCLOUD_DB_PASS'; FLUSH PRIVILEGES;" 2>/dev/null ||
+    mysql -u root -p"$(sudo grep -oP "(?<=password: ).*" /root/nextcloud-creds.txt 2>/dev/null || echo "")" \
+        -e "ALTER USER 'nextcloud'@'localhost' IDENTIFIED BY '$NEXTCLOUD_DB_PASS'; FLUSH PRIVILEGES;" 2>/dev/null && {
+        log "Nextcloud DB user password updated"
+    } || {
+        log "Could not update DB password. When prompted, enter MariaDB root password:"
+        read -r -s -p "Root password: " MARIADB_ROOT_PASS
+        echo
+        mysql -u root -p"$MARIADB_ROOT_PASS" -e "ALTER USER 'nextcloud'@'localhost' IDENTIFIED BY '$NEXTCLOUD_DB_PASS'; FLUSH PRIVILEGES;"
+        log "Nextcloud DB user password updated"
+    }
+else
+    log "WARNING: Could not configure MariaDB automatically"
+    log "Enter MariaDB root password to create nextcloud DB user:"
+    read -r -s -p "Root password: " MARIADB_ROOT_PASS
+    echo
+    mysql -u root -p"$MARIADB_ROOT_PASS" -e "
+        CREATE DATABASE IF NOT EXISTS nextcloud CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+        CREATE USER IF NOT EXISTS 'nextcloud'@'localhost' IDENTIFIED BY '$NEXTCLOUD_DB_PASS';
+        GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextcloud'@'localhost';
+        FLUSH PRIVILEGES;"
+    log "Nextcloud database created"
+fi
 
 log "Downloading Nextcloud..."
 
