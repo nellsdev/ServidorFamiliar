@@ -78,7 +78,7 @@ log "Nextcloud database and user created"
 log "Downloading Nextcloud..."
 
 NC_VERSION="34"
-wget -q "https://download.nextcloud.com/server/releases/nextcloud-${NC_VERSION}.tar.bz2" -O /tmp/nextcloud.tar.bz2
+wget -nv "https://download.nextcloud.com/server/releases/latest-${NC_VERSION}.tar.bz2" -O /tmp/nextcloud.tar.bz2
 tar xjf /tmp/nextcloud.tar.bz2 -C /var/www/
 chown -R www-data:www-data /var/www/nextcloud
 rm -f /tmp/nextcloud.tar.bz2
